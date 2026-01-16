@@ -1,0 +1,4 @@
+TID="202600115_test"
+SRC="http://192.168.253.95:5244/d/HP-Z2-Tower-G9-Workstation/Videos/1.mkv?sign=VXFk9IIugmqVWv8Aj_OiYvS-DS_vjGN7mn1Fa8-5V6s=:0"
+CMD='ffmpeg -hwaccels'
+DEST="s3://bucket/output/big_buck_bunny_8M.mp4"

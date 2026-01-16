@@ -1,0 +1,4 @@
+TID="202600116_test"
+SRC="http://192.168.253.95:5244/d/HP-Z2-Tower-G9-Workstation/Videos/1_compressed_with_subtitles.mkv?sign=cgyiN9tmY6FiQ04Pq-9yO8glAXUpLDVXsytV67qv-w8=:0"
+CMD='ffmpeg -hwaccel cuda -i "${IN}" -c:v h264_nvenc -vf scale=-1:720 -c:a aac  -preset slow "${OUT}"'
+DEST="openlist:/seamus/"
