@@ -1,0 +1,14 @@
+[Unit]
+Description=FFRmt Task Service for %i
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/lzh/code/FFRmt
+ExecStart=/home/lzh/code/FFRmt/run-task.sh %i
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
