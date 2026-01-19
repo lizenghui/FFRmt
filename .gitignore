@@ -1,4 +1,7 @@
+# Ignore IDE specific files
 .joycode
+
+# Ignore task, json and log files
 *.task
-.json
-.log
+*.json
+*.log
