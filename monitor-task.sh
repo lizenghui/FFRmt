@@ -5,7 +5,7 @@ set -euo pipefail
 # 监控配置
 CHECK_INTERVAL=2    # 检查间隔（秒）
 STATUS_FILE="status.json"
-STATUS_REMOTE="openlist:/pve/ubuntu/home/lzh/www/ffrmt"  # 远程状态存储路径
+STATUS_REMOTE="ulanqab:/ulanqab/ubuntu/www/ffrmt"  # 远程状态存储路径
 
 # 获取任务目录和主进程PID
 TASK_DIR="${1:-$(pwd)}"
@@ -71,11 +71,14 @@ while true; do
             fi
         fi
         
-        # 分析转码状态
-        if [[ -z "$LAST_FFMPEG" ]] && grep -q "Lsize=" "$FFMPEG_LOG" 2>/dev/null; then
+        # 分析转码状态 - 改进的完成状态识别
+        # 检查是否有完成的最终标志
+        if grep -q "video:[0-9]\+KiB audio:" "$FFMPEG_LOG" 2>/dev/null || grep -q "muxing overhead:" "$FFMPEG_LOG" 2>/dev/null; then
             FFMPEG_STATUS="completed"
             FFMPEG_PROGRESS="100%"
+            FFMPEG_SPEED=$(echo "$LAST_FFMPEG" | grep -o "speed=[0-9.]*x" | sed 's/speed=//' || echo "")
         elif [[ -n "$LAST_FFMPEG" ]]; then
+            # 转码进行中，提取进度信息
             FFMPEG_STATUS="transcoding"
             
             # 提取速度（从speed=字段，保持x后缀）
@@ -98,9 +101,12 @@ while true; do
             else
                 FFMPEG_PROGRESS="0%"
             fi
-            
-        else
+        elif grep -q "Lsize=" "$FFMPEG_LOG" 2>/dev/null && grep -q "speed=" "$FFMPEG_LOG" 2>/dev/null; then
+            # 有基本输出但无最新帧信息，可能是刚完成或刚开始
             FFMPEG_STATUS="transcoding"
+            FFMPEG_PROGRESS="0%"
+        else
+            FFMPEG_STATUS="not_started"
             FFMPEG_PROGRESS="0%"
         fi
     fi
@@ -112,23 +118,60 @@ while true; do
     
     if [[ -f "$UPLOAD_LOG" ]]; then
         # 获取最后几行日志
-        LAST_UPLOAD=$(tail -n 15 "$UPLOAD_LOG" 2>/dev/null || echo "")
+        LAST_UPLOAD=$(tail -n 30 "$UPLOAD_LOG" 2>/dev/null || echo "")
         
-        # 分析上传状态
-        if echo "$LAST_UPLOAD" | grep -q "100%"; then
+        # 分析上传状态 - 基于实际rclone日志格式
+        
+        # 1. 检查是否完成（文件计数完成）
+        if echo "$LAST_UPLOAD" | grep -q "Transferred:.*1 / 1, 100%"; then
             UPLOAD_STATUS="completed"
             UPLOAD_PROGRESS="100%"
+            # 尝试从完成行提取速度
+            COMPLETED_LINE=$(echo "$LAST_UPLOAD" | grep "Transferred:.*1 / 1, 100%" | tail -n 1)
+            UPLOAD_SPEED=$(echo "$COMPLETED_LINE" | grep -o '[0-9.]\+ MiB\/s' | sed 's/ MiB\/s//' | tail -n 1 || echo "")
+            
+        # 2. 检查是否正在传输
         elif echo "$LAST_UPLOAD" | grep -q "Transferring:"; then
             UPLOAD_STATUS="uploading"
             
-            # 提取进度百分比（从文件名行，格式： * filename: XX% /X.XXXGi, XX.XXXMi/s, XXmXXs）
-            UPLOAD_PROGRESS=$(echo "$LAST_UPLOAD" | grep -A1 "Transferring:" | grep -v "Transferring:" | grep -o '[0-9]\+%' | head -n 1 || echo "0%")
+            # 获取最后一个完整的Transferring块
+            # 从Transferring:开始，到下一个非Transferring行结束
+            TRANSFERRING_BLOCK=$(echo "$LAST_UPLOAD" | awk '
+                /Transferring:/ {block=""; in_block=1}
+                in_block {block = block $0 "\n"}
+                !/Transferring:/ && in_block && !/^[[:space:]]*\*/ {in_block=0; print block; exit}
+            ' | tail -n 1)
             
-            # 提取速度（从文件名行，格式：XX.XXXMi/s）
-            UPLOAD_SPEED=$(echo "$LAST_UPLOAD" | grep -A1 "Transferring:" | grep -v "Transferring:" | grep -o '[0-9.]\+Mi\/s' | head -n 1 || echo "")
+            if [[ -n "$TRANSFERRING_BLOCK" ]]; then
+                # 从文件名行提取进度（格式： * filename: XX%）
+                UPLOAD_PROGRESS=$(echo "$TRANSFERRING_BLOCK" | grep '\*.*:' | grep -o '[0-9]\+%' | head -n 1 || echo "0%")
+                
+                # 从文件名行提取速度（格式：XX.XXXMi/s）
+                UPLOAD_SPEED=$(echo "$TRANSFERRING_BLOCK" | grep '\*.*:' | grep -o '[0-9.]\+Mi\/s' | head -n 1 || echo "")
+            fi
+            
+            # 如果没有从文件名提取到进度，尝试从总传输行提取
+            if [[ "$UPLOAD_PROGRESS" == "0%" ]]; then
+                LAST_TRANSFERRED=$(echo "$LAST_UPLOAD" | grep "Transferred:" | grep -v "0 / 1" | tail -n 1)
+                if [[ -n "$LAST_TRANSFERRED" ]]; then
+                    UPLOAD_PROGRESS=$(echo "$LAST_TRANSFERRED" | grep -o '[0-9]\+%' | tail -n 1 || echo "0%")
+                    UPLOAD_SPEED=$(echo "$LAST_TRANSFERRED" | grep -o '[0-9.]\+ MiB\/s' | sed 's/ MiB\/s//' | tail -n 1 || echo "")
+                fi
+            fi
+            
+        # 3. 只有Transferred行，没有Transferring
+        elif echo "$LAST_UPLOAD" | grep -q "Transferred:"; then
+            UPLOAD_STATUS="uploading"
+            
+            # 从最后一行有效的Transferred提取信息
+            LAST_TRANSFERRED=$(echo "$LAST_UPLOAD" | grep "Transferred:" | grep -v "0 / 1, 0%" | tail -n 1)
+            if [[ -n "$LAST_TRANSFERRED" ]]; then
+                UPLOAD_PROGRESS=$(echo "$LAST_TRANSFERRED" | grep -o '[0-9]\+%' | tail -n 1 || echo "0%")
+                UPLOAD_SPEED=$(echo "$LAST_TRANSFERRED" | grep -o '[0-9.]\+ MiB\/s' | tail -n 1 || echo "")
+            fi
             
         else
-            UPLOAD_STATUS="uploading"
+            UPLOAD_STATUS="not_started"
         fi
     fi
 

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-# 解析命令行参数
+# 
 FORCE=false
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -23,8 +23,11 @@ MONITOR="monitor-task.sh"
 REMOTE="jdcloud:tasks"
 PENDING="$REMOTE/pending"
 RUNNING="$REMOTE/running"
-LOCAL_TASK_DIR="/tmp/tasks"
-BASE_DIR="/tmp/jobs"          
+
+BASE_DIR="/mnt/pooldata/nas/FFRmt"
+
+LOCAL_TASK_DIR="$BASE_DIR/tasks"
+LOCAL_JOB_DIR="$BASE_DIR/jobs"
 mkdir -p "$LOCAL_TASK_DIR"
 
 # 取第一条对象
@@ -62,7 +65,7 @@ if [[ -f "$LOCAL_TASK_PATH" ]]; then
 
     # Create work directory based on TID
     if [[ -n "${TID:-}" ]]; then
-        WORK_DIR="$BASE_DIR/$TID"
+        WORK_DIR="$LOCAL_JOB_DIR/$TID"
         mkdir -p "$WORK_DIR"
         echo "[+] Created work directory: $WORK_DIR"
         

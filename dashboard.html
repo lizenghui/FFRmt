@@ -1,256 +1,113 @@
-ashboard.html</path>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FFRmt Dashboard</title>
+    <title>FFRmt Task Monitor</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
         }
-
         .header {
             text-align: center;
-            color: white;
             margin-bottom: 30px;
         }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 300;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .tasks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 20px;
-        }
-
         .task-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
         }
-
-        .task-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        }
-
         .task-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .task-id {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .task-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
-        .status-running {
-            background: #e8f5e8;
-            color: #27ae60;
-        }
-
-        .status-completed {
-            background: #e8f4fd;
-            color: #3498db;
-        }
-
-        .status-error {
-            background: #fee;
-            color: #e74c3c;
-        }
-
-        .progress-section {
-            margin-bottom: 20px;
-        }
-
-        .progress-item {
             margin-bottom: 15px;
         }
-
+        .task-id {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .task-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-completed {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .progress-section {
+            margin-bottom: 10px;
+        }
+        .progress-item {
+            margin-bottom: 10px;
+        }
         .progress-label {
             display: flex;
             justify-content: space-between;
             margin-bottom: 5px;
-            font-size: 0.9rem;
-            color: #555;
+            font-size: 0.9em;
         }
-
         .progress-bar {
             width: 100%;
-            height: 8px;
-            background: #ecf0f1;
-            border-radius: 4px;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
             overflow: hidden;
         }
-
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 4px;
+            background: #28a745;
             transition: width 0.3s ease;
         }
-
-        .speed-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
+        .timestamp {
+            text-align: right;
+            font-size: 0.8em;
             color: #666;
             margin-top: 10px;
         }
-
-        .loading {
+        .loading, .error {
             text-align: center;
-            color: white;
-            font-size: 1.2rem;
-            margin-top: 50px;
-        }
-
-        .error {
-            text-align: center;
-            color: #e74c3c;
-            background: rgba(255, 255, 255, 0.9);
             padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
         }
-
-        .timestamp {
-            font-size: 0.8rem;
-            color: #999;
-            text-align: right;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .tasks-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .error {
+            color: #dc3545;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>任务监控面板</h1>
-            <p>实时监控系统任务状态</p>
+            <h1>Task Monitor</h1>
         </div>
 
-        <div class="controls">
-            <button class="btn" onclick="loadTasks()">刷新</button>
-            <button class="btn" onclick="toggleAutoRefresh()">自动刷新</button>
+        <div id="tasks-container">
+            <div class="loading">Loading tasks...</div>
         </div>
-
-        <div id="tasks-container" class="tasks-grid">
-            <div class="loading">正在加载任务...</div>
-        </div>
+        <div class="timestamp" id="update-time"></div>
     </div>
 
     <script>
         let autoRefreshInterval = null;
         let isAutoRefreshing = false;
 
-        // 格式化文件大小
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // 格式化速度
-        function formatSpeed(speed) {
-            if (!speed) return '-';
-            return speed;
-        }
-
-        // 获取状态显示类
+        // 获取状态样式类
         function getStatusClass(status) {
             if (status === 'completed') return 'status-completed';
             if (status === 'error') return 'status-error';
@@ -261,11 +118,10 @@ ashboard.html</path>
         function createTaskCard(taskData, taskId) {
             try {
                 const card = document.createElement('div');
-                card.className = 'task-card fade-in';
+                card.className = 'task-card';
                 
-                // 确保taskData结构正确
                 if (!taskData || typeof taskData !== 'object') {
-                    throw new Error('任务数据格式错误');
+                    throw new Error('Invalid task data format');
                 }
                 
                 const download = taskData.download || {};
@@ -275,7 +131,6 @@ ashboard.html</path>
                 card.innerHTML = `
                     <div class="task-header">
                         <div class="task-id">${taskId}</div>
-                        <div class="task-status ${getStatusClass(upload.status)}">${upload.status || 'unknown'}</div>
                     </div>
 
                     <div class="progress-section">
@@ -284,21 +139,19 @@ ashboard.html</path>
                         ${createProgressItem('上传', upload.status, upload.progress, upload.speed)}
                     </div>
 
-                    <div class="timestamp">更新时间: ${new Date(taskData.timestamp).toLocaleString()}</div>
                 `;
 
                 return card;
             } catch (error) {
                 console.error(`创建任务卡片失败:`, error, taskData);
-                // 返回一个错误卡片
                 const errorCard = document.createElement('div');
-                errorCard.className = 'task-card fade-in';
+                errorCard.className = 'task-card';
                 errorCard.innerHTML = `
                     <div class="task-header">
                         <div class="task-id">${taskId}</div>
-                        <div class="task-status status-error">错误</div>
+                        <div class="task-status status-error">Error</div>
                     </div>
-                    <div class="error">任务数据格式错误: ${error.message}</div>
+                    <div class="error">Invalid task data format: ${error.message}</div>
                 `;
                 return errorCard;
             }
@@ -307,134 +160,64 @@ ashboard.html</path>
         // 创建进度项
         function createProgressItem(label, status, progress, speed) {
             const progressValue = parseFloat((progress || '0%').replace('%', ''));
-            const statusText = status || 'not_started';
+            const statusText = status || 'not started';
             
             return `
                 <div class="progress-item">
                     <div class="progress-label">
                         <span>${label} - ${statusText}</span>
-                        <span>${progress || '0%'}</span>
+                        <span>${progress || '0%'} ${speed ? `(${speed})` : ''}</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${progressValue}%"></div>
-                    </div>
-                    <div class="speed-info">
-                        <span>速度: ${formatSpeed(speed)}</span>
                     </div>
                 </div>
             `;
         }
 
-        // 加载任务 - 从合并的tasks.json文件加载
+        // 加载任务
         async function loadTasks() {
             const container = document.getElementById('tasks-container');
             
             try {
-                // 加载合并后的任务列表
                 const response = await fetch('tasks.json');
                 
                 if (!response.ok) {
-                    throw new Error('无法加载任务列表文件，请先运行 ./merge-status.sh');
+                    throw new Error('Failed to load task list file, please run ./merge-status.sh first');
                 }
                 
                 const taskList = await response.json();
                 
                 if (taskList.length === 0) {
-                    // 显示示例数据用于测试
-                    const mockData = {
-                        "task_id": "demo_task",
-                        "timestamp": new Date().toISOString(),
-                        "download": {
-                            "status": "completed",
-                            "progress": "100%",
-                            "speed": "134M/s"
-                        },
-                        "ffmpeg": {
-                            "status": "completed",
-                            "progress": "100%",
-                            "speed": "13.4x"
-                        },
-                        "upload": {
-                            "status": "uploading",
-                            "progress": "67%",
-                            "speed": "5.914Mi/s"
-                        }
-                    };
-                    
-                    const demoCard = createTaskCard(mockData, 'demo_task');
-                    container.appendChild(demoCard);
-                    
-                    // 添加提示信息
-                    const infoDiv = document.createElement('div');
-                    infoDiv.className = 'error';
-                    infoDiv.innerHTML = '提示：请运行 ./merge-status.sh 脚本来合并任务状态文件';
-                    container.appendChild(infoDiv);
+                    container.innerHTML = '<div class="error">No task data available</div>';
                     return;
                 }
 
                 container.innerHTML = '';
+                const updateTime = document.getElementById('update-time');
                 
                 for (const task of taskList) {
                     try {
-                        const card = createTaskCard(task.data, task.taskId);
+                        const card = createTaskCard(task, task.task_id);
                         container.appendChild(card);
                     } catch (error) {
                         console.error(`创建任务卡片失败:`, error);
                     }
                 }
                 
+                updateTime.textContent = `Last updated: ${new Date().toLocaleString()}`;
+                
             } catch (error) {
-                container.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+                container.innerHTML = `<div class="error">Load failed: ${error.message}</div>`;
             }
         }
 
-        // 切换自动刷新
-        function toggleAutoRefresh() {
-            if (isAutoRefreshing) {
-                clearInterval(autoRefreshInterval);
-                autoRefreshInterval = null;
-                isAutoRefreshing = false;
-                document.querySelector('.controls button:nth-child(2)').textContent = '自动刷新';
-            } else {
-                loadTasks();
-                autoRefreshInterval = setInterval(loadTasks, 5000); // 5秒刷新一次
-                isAutoRefreshing = true;
-                document.querySelector('.controls button:nth-child(2)').textContent = '停止刷新';
-            }
-        }
-
-        // 页面加载完成后初始化
+        // 页面加载完成后初始化并开始自动刷新
         window.addEventListener('DOMContentLoaded', () => {
             loadTasks();
+            // 设置自动刷新，每5秒更新一次
+            autoRefreshInterval = setInterval(loadTasks, 5000);
         });
-
-        // 添加一些模拟数据用于测试
-        function loadMockData() {
-            const mockData = {
-                "task_id": "20240011517_test",
-                "timestamp": "2024-01-16T11:00:00Z",
-                "download": {
-                    "status": "completed",
-                    "progress": "100%",
-                    "speed": "134M/s"
-                },
-                "ffmpeg": {
-                    "status": "completed",
-                    "progress": "100%",
-                    "speed": "13.4x"
-                },
-                "upload": {
-                    "status": "uploading",
-                    "progress": "45%",
-                    "speed": "5.914Mi/s"
-                }
-            };
-
-            const container = document.getElementById('tasks-container');
-            container.innerHTML = '';
-            const card = createTaskCard(mockData, '20240011517_test');
-            container.appendChild(card);
-        }
     </script>
 </body>
 </html>
