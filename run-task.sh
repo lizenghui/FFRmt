@@ -53,10 +53,10 @@ if [[ -f "$LOCAL_TASK_PATH" ]]; then
             
             # Extract filename from URL, removing query parameters
             FILENAME=$(basename "${SRC%%\?*}")
+            # Remove file extension to get base name
+            BASENAME="${FILENAME%.*}"
             DOWNLOAD_PATH="$WORK_DIR/$FILENAME"
             LOG_FILE="$WORK_DIR/downloads.log"
-          
-            echo "Filename: $FILENAME"
         
             # Download with progress and log to file
             
@@ -65,7 +65,7 @@ if [[ -f "$LOCAL_TASK_PATH" ]]; then
                 wget --progress=dot:mega "$SRC" -O "$DOWNLOAD_PATH" 2>&1 | tee -a "$LOG_FILE"
             fi
             IN=$DOWNLOAD_PATH
-            OUT=$WORK_DIR/out_$FILENAME
+            OUT=$WORK_DIR/out_$BASENAME
         fi
     fi
 
@@ -74,17 +74,14 @@ if [[ -f "$LOCAL_TASK_PATH" ]]; then
     
     # Execute the CMD if it's set
     if [[ -n "${CMD:-}" ]]; then
-        # 检查输出文件是否已存在
-        if [[ -f "${OUT:-}" ]] && [[ "$FORCE" == "false" ]]; then
-            echo "[+] Output file already exists: $OUT"
-            echo "[+] Skipping transcoding (use -f to force re-transcode)"
-        else
-            echo "[+] Transcoding…"
-            
-            rm -vf "$OUT"
-            eval "$CMD" 2>&1 |  stdbuf -oL tr '\r' '\n' | tee -a "$FFMPEG_LOG"
-            echo "[+] Transcoding completed successfully"
-        fi
+    
+        echo "[+] Transcoding…"
+        echo "[+] CMD: $(echo "$CMD" | sed "s|\${IN}|$IN|g" | sed "s|\${OUT}|$OUT|g")"
+        
+        rm -vf "$OUT"
+        eval "$CMD" 2>&1 |  stdbuf -oL tr '\r' '\n' | tee -a "$FFMPEG_LOG"
+        echo "[+] Transcoding completed successfully"
+      
     else
         echo "[-] CMD variable is not set, skipping execution"
     fi
