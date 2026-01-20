@@ -6,7 +6,7 @@ REMOTE="jdcloud:tasks"
 PENDING="$REMOTE/pending"
 RUNNING="$REMOTE/running"
 
-BASE_DIR="/mnt/pooldata/nas/FFRmt"
+BASE_DIR="${FFRMT_BASE_DIR:-$HOME/FFRmt}"
 LOCAL_TASK_DIR="$BASE_DIR/tasks"
 mkdir -p "$LOCAL_TASK_DIR"
 

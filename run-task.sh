@@ -6,7 +6,7 @@ FORCE=false
 
 
 MONITOR="monitor-task.sh"
-BASE_DIR="/mnt/pooldata/nas/FFRmt"
+BASE_DIR="${FFRMT_BASE_DIR:-$HOME/FFRmt}"
 LOCAL_JOB_DIR="$BASE_DIR/jobs"
 LOCAL_TASK_DIR="$BASE_DIR/tasks"
 

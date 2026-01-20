@@ -1,0 +1,15 @@
+[Unit]
+Description=FFRmt Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# 重要：请根据实际安装路径修改 WorkingDirectory
+WorkingDirectory=/root/FFRmt
+# 重要：如需自定义基础目录，请取消下一行注释并修改路径
+# Environment="FFRMT_BASE_DIR=/your/custom/path"
+ExecStart=/bin/bash /root/FFRmt/fetch-task.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=FFRmt Service %i
+After=network-online.target
+Wants=network-online.target
+# 确保在 FFRmt.service 之后启动，可以继承其环境变量
+After=FFRmt.service
+
+[Service]
+Type=simple
+# 重要：请根据实际安装路径修改 WorkingDirectory
+WorkingDirectory=/root/FFRmt
+# 注意：基础目录环境变量在 FFRmt.service 中配置，此服务会自动继承
+ExecStart=/bin/bash /root/FFRmt/run-task.sh %i
+# 重启策略
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

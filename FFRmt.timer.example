@@ -1,0 +1,15 @@
+[Unit]
+Description=FFRmt Timer
+
+[Timer]
+# 系统启动后 10 秒开始执行
+OnBootSec=10s
+# 每 10 秒执行一次
+OnUnitActiveSec=10s
+# 定时器精度为 1 秒
+AccuracySec=1s
+# 触发 FFRmt.service 单元
+Unit=FFRmt.service
+
+[Install]
+WantedBy=timers.target
