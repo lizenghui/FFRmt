@@ -2,11 +2,19 @@
 
 set -euo pipefail
 
-REMOTE="jdcloud:tasks"
-PENDING="$REMOTE/pending"
-RUNNING="$REMOTE/running"
+# Source configuration file
+CONFIG_FILE="$(dirname "$0")/config.env"
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+else
+    echo "[-] Error: Configuration file not found at $CONFIG_FILE"
+    exit 1
+fi
 
-BASE_DIR="${FFRMT_BASE_DIR:-$HOME/FFRmt}"
+PENDING="$FFRMT_TASK_REMOTE/pending"
+RUNNING="$FFRMT_TASK_REMOTE/running"
+
+BASE_DIR="$FFRMT_BASE_DIR"
 LOCAL_TASK_DIR="$BASE_DIR/tasks"
 mkdir -p "$LOCAL_TASK_DIR"
 

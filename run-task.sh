@@ -4,9 +4,18 @@ set -euo pipefail
 
 FORCE=false
 
+# Source configuration file
+SCRIPT_DIR="$(dirname "$0")"
+CONFIG_FILE="$SCRIPT_DIR/config.env"
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+else
+    echo "[-] Error: Configuration file not found at $CONFIG_FILE"
+    exit 1
+fi
 
-MONITOR="monitor-task.sh"
-BASE_DIR="${FFRMT_BASE_DIR:-$HOME/FFRmt}"
+BASE_DIR="$FFRMT_BASE_DIR"
+MONITOR="$SCRIPT_DIR/monitor-task.sh"
 LOCAL_JOB_DIR="$BASE_DIR/jobs"
 LOCAL_TASK_DIR="$BASE_DIR/tasks"
 
@@ -72,7 +81,6 @@ if [[ -f "$LOCAL_TASK_PATH" ]]; then
     FFMPEG_LOG="$WORK_DIR/ffmpeg.log"
     UPLOAD_LOG="$WORK_DIR/upload.log"
     
-    # Execute the CMD if it's set
     if [[ -n "${CMD:-}" ]]; then
     
         echo "[+] Transcoding…"

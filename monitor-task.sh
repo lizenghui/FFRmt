@@ -2,10 +2,19 @@
 
 set -euo pipefail
 
+# Source configuration file
+CONFIG_FILE="$(dirname "$0")/config.env"
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+else
+    echo "[-] Error: Configuration file not found at $CONFIG_FILE"
+    exit 1
+fi
+
 # 监控配置
 CHECK_INTERVAL=2    # 检查间隔（秒）
 STATUS_FILE="status.json"
-STATUS_REMOTE="ulanqab:/ulanqab/ubuntu/www/ffrmt"  # 远程状态存储路径
+STATUS_REMOTE="$FFRMT_STATUS_REMOTE"  # 远程状态存储路径
 
 # 获取任务目录和主进程PID
 TASK_DIR="${1:-$(pwd)}"
