@@ -9,8 +9,8 @@ echo "[+] 开始合并状态文件..."
 echo "[" > "$OUTPUT_FILE"
 FIRST=true
 
-# 查找所有.status.json文件
-for file in *.status.json; do
+# 查找所有.status.json文件，按修改时间排序（最新的在前）
+for file in $(ls -rt *.status.json 2>/dev/null); do
     if [[ -f "$file" ]]; then
         task_id=$(basename "$file" .status.json)
         echo "[+] 处理任务: $task_id"
