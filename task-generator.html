@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .form-container {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 2px solid #e9ecef;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .preview-content {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .upload-options {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            border: 1px solid #bbdefb;
+        }
+        
+        .upload-options h4 {
+            color: #1565c0;
+            margin-bottom: 15px;
+        }
+        
+        .rclone-command {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .copy-btn:hover {
+            background: #2d3748;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 FFRmt Task生成器</h1>
+        
+        </div>
+        
+        <div class="form-container">
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="videoUrl">视频源URL *</label>
+                    <input type="url" id="videoUrl" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="destPath">目标路径 *</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="remoteSelect" style="flex: 0 0 150px;">
+                            <option value="">选择远程...</option>
+                        </select>
+                        <input type="text" id="destPath" required  style="flex: 1;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <label for="ffmpegCmd">FFmpeg命令</label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: normal; font-size: 14px;">
+                            <input type="checkbox" id="useFFmpegCmd" checked>
+                            
+                        </label>
+                    </div>
+                    <textarea id="ffmpegCmd" placeholder='ffmpeg -hide_banner -y -hwaccel cuda -i "${IN}" -c:v hevc_nvenc -preset p7 -tune hq -rc constqp -qp 30 -c:a copy -pix_fmt p010le "${OUT}"'></textarea>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="preview-title">📋 预览</div>
+                    <div class="preview-content" id="preview"></div>
+                </div>
+                
+                <div class="status-message" id="statusMessage"></div>
+                
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">🚀 提交</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class SimpleTaskGenerator {
+            constructor() {
+                this.initializeElements();
+                this.bindEvents();
+                this.loadRcloneRemotes();
+                this.updatePreview();
+            }
+            
+            initializeElements() {
+                this.form = document.getElementById('taskForm');
+                this.videoUrl = document.getElementById('videoUrl');
+                this.destPath = document.getElementById('destPath');
+                this.remoteSelect = document.getElementById('remoteSelect');
+                this.ffmpegCmd = document.getElementById('ffmpegCmd');
+                this.useFFmpegCmd = document.getElementById('useFFmpegCmd');
+                this.preview = document.getElementById('preview');
+                this.statusMessage = document.getElementById('statusMessage');
+            }
+            
+            bindEvents() {
+                // 表单输入监听
+                [this.videoUrl, this.destPath, this.ffmpegCmd]
+                    .forEach(input => input.addEventListener('input', () => this.updatePreview()));
+                
+                // FFmpeg开关监听
+                this.useFFmpegCmd.addEventListener('change', () => this.toggleFFmpegCmd());
+                
+                // 远程选择监听
+                this.remoteSelect.addEventListener('change', () => this.updateDestPath());
+                
+                // 表单提交
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+            }
+            
+            toggleFFmpegCmd() {
+                const isChecked = this.useFFmpegCmd.checked;
+                this.ffmpegCmd.disabled = !isChecked;
+                if (!isChecked) {
+                    this.ffmpegCmd.style.opacity = '0.5';
+                    this.ffmpegCmd.style.backgroundColor = '#f5f5f5';
+                } else {
+                    this.ffmpegCmd.style.opacity = '1';
+                    this.ffmpegCmd.style.backgroundColor = '';
+                }
+                this.updatePreview();
+            }
+            
+            buildFullDestPath() {
+                const selectedRemote = this.remoteSelect.value;
+                const currentPath = this.destPath.value;
+                
+                if (selectedRemote) {
+                    if (currentPath && !currentPath.includes(':')) {
+                        return selectedRemote + currentPath;
+                    } else {
+                        return selectedRemote;
+                    }
+                } else {
+                    return '';
+                }
+            }
+            
+            updatePreview() {
+                const taskId = this.generateTaskId();
+                const videoUrl = this.videoUrl.value || 'https://example.com/video.mp4';
+                const fullDestPath = this.buildFullDestPath();
+                
+                // 处理FFmpeg开关
+                const useFFmpeg = this.useFFmpegCmd.checked;
+                const ffmpegCmd = useFFmpeg ? (this.ffmpegCmd.value || 'ffmpeg -i "${IN}" -c:v hevc_nvenc "${OUT}"') : '';
+                
+                let content;
+                if (useFFmpeg) {
+                    content = `TID="${taskId}"
+SRC="${videoUrl}"
+CMD='${ffmpegCmd}'
+DEST="${fullDestPath}"`;
+                } else {
+                    content = `TID="${taskId}"
+SRC="${videoUrl}"
+# CMD='${ffmpegCmd}'
+DEST="${fullDestPath}"`;
+                }
+                
+                this.preview.textContent = content;
+            }
+            
+            async loadRcloneRemotes() {
+                try {
+                    const response = await fetch('/api/rclone-listremotes');
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // 清空现有选项
+                        this.remoteSelect.innerHTML = '<option value="">选择远程...</option>';
+                        
+                        // 添加远程配置选项
+                        result.remotes.forEach(remote => {
+                            const option = document.createElement('option');
+                            option.value = remote + ':';
+                            option.textContent = remote;
+                            this.remoteSelect.appendChild(option);
+                        });
+                        
+                        console.log(`✅ 加载了 ${result.count} 个rclone远程配置`);
+                    } else {
+                        console.warn('⚠️ 无法加载rclone远程配置:', result.error);
+                        this.showStatus('无法加载rclone远程配置，请手动输入', 'error');
+                    }
+                } catch (error) {
+                    console.error('❌ 加载rclone远程配置失败:', error);
+                    this.showStatus('加载rclone远程配置失败', 'error');
+                }
+            }
+            
+            updateDestPath() {
+                const selectedRemote = this.remoteSelect.value;
+                const currentPath = this.destPath.value;
+                
+                if (selectedRemote) {
+                    // 如果选择了远程，只更新路径部分，不显示远程前缀
+                    if (currentPath && !currentPath.includes(':')) {
+                        // 保持当前路径不变（只显示路径部分）
+                        this.destPath.value = currentPath;
+                    } else if (!currentPath) {
+                        this.destPath.value = '';
+                    }
+                }
+                
+                this.updatePreview();
+            }
+            
+            generateTaskId() {
+                const now = new Date();
+                const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+                const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
+                const random = Math.random().toString(36).substr(2, 6);
+                return `task_${dateStr}_${timeStr}_${random}`;
+            }
+            
+            
+            
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                if (!this.validateForm()) {
+                    return;
+                }
+                
+                try {
+                    this.showStatus('正在base64编码并上传...', 'info');
+                    
+                    // 生成任务数据 - 使用统一的路径构建方法
+                    const taskData = {
+                        videoUrl: this.videoUrl.value,
+                        destPath: this.buildFullDestPath(),
+                        customCmd: this.ffmpegCmd.value
+                    };
+                    
+                    // 创建任务内容
+                    const taskContent = this.generateTaskContent(taskData);
+                    const taskId = this.generateTaskId();
+                    const filename = `${taskId}.task`;
+                    
+                    // base64编码
+                    const base64Content = btoa(unescape(encodeURIComponent(taskContent)));
+                    
+                    this.showStatus('正在提交到后端...', 'info');
+                    
+                    // 发送到后端API
+                    const response = await fetch('/api/upload-base64', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            taskId: taskId,
+                            filename: filename,
+                            base64Content: base64Content,
+                            destPath: this.buildFullDestPath()
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showStatus(`✅ 上传成功: ${result.message}`, 'success');
+                    } else {
+                        this.showStatus(`❌ 上传失败: ${result.message}`, 'error');
+                    }
+                    
+                } catch (error) {
+                    this.showStatus(`❌ 上传失败: ${error.message}`, 'error');
+                    console.error('上传错误:', error);
+                }
+            }
+            
+            
+            validateForm() {
+                if (!this.videoUrl.value.trim()) {
+                    this.showStatus('请输入视频源URL', 'error');
+                    this.videoUrl.focus();
+                    return false;
+                }
+                
+                if (!this.destPath.value.trim()) {
+                    this.showStatus('请输入目标路径', 'error');
+                    this.destPath.focus();
+                    return false;
+                }
+                
+                // 只有当FFmpeg开关开启时才验证命令
+                if (this.useFFmpegCmd.checked && !this.ffmpegCmd.value.trim()) {
+                    this.showStatus('请输入FFmpeg命令', 'error');
+                    this.ffmpegCmd.focus();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            validateBasicFields() {
+                if (!this.videoUrl.value.trim()) {
+                    this.showStatus('请输入视频源URL', 'error');
+                    this.videoUrl.focus();
+                    return false;
+                }
+                
+                if (!this.destPath.value.trim()) {
+                    this.showStatus('请输入目标路径', 'error');
+                    this.destPath.focus();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            resetForm() {
+                this.form.reset();
+                this.updatePreview();
+                this.hideStatus();
+                this.uploadOptions.style.display = 'none';
+            }
+            
+            showStatus(message, type = 'info') {
+                this.statusMessage.textContent = message;
+                this.statusMessage.className = `status-message status-${type}`;
+                this.statusMessage.style.display = 'block';
+                
+                if (type === 'success' || type === 'error') {
+                    setTimeout(() => this.hideStatus(), 5000);
+                }
+            }
+            
+            hideStatus() {
+                this.statusMessage.style.display = 'none';
+            }
+            
+            async handleBase64Upload() {
+                if (!this.validateForm()) {
+                    return;
+                }
+                
+                try {
+                    this.showStatus('正在base64编码并上传...', 'info');
+                    
+                    // 生成任务数据
+                    const taskData = {
+                        videoUrl: this.videoUrl.value,
+                        destPath: this.buildFullDestPath(),
+                        taskId: this.generateTaskId(),
+                        customCmd: this.ffmpegCmd.value
+                    };
+                    
+                    // 创建任务内容
+                    const taskContent = this.generateTaskContent(taskData);
+                    const taskId = this.generateTaskId();
+                    
+                    // base64编码
+                    const base64Content = btoa(unescape(encodeURIComponent(taskContent)));
+                    
+                    this.showStatus('正在提交到后端...', 'info');
+                    
+                    // 发送到后端API
+                    const response = await fetch('/api/upload-base64', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            taskId: taskId,
+                            filename: `${taskId}.task`,
+                            base64Content: base64Content,
+                            destPath: this.buildFullDestPath()
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showStatus(`✅ base64上传成功: ${result.message}`, 'success');
+                    } else {
+                        this.showStatus(`❌ base64上传失败: ${result.message}`, 'error');
+                    }
+                    
+                } catch (error) {
+                    this.showStatus(`❌ base64上传失败: ${error.message}`, 'error');
+                    console.error('Base64上传错误:', error);
+                }
+            }
+        }
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            new SimpleTaskGenerator();
+        });
+    </script>
+</body>
+</html>

@@ -14,7 +14,7 @@ fi
 # 监控配置
 CHECK_INTERVAL=2    # 检查间隔（秒）
 STATUS_FILE="status.json"
-STATUS_REMOTE="$FFRMT_STATUS_REMOTE"  # 远程状态存储路径
+LOCAL_STATUS_DIR="/var/www/html"  # 本地状态存储目录
 
 # 获取任务目录和主进程PID
 TASK_DIR="${1:-$(pwd)}"
@@ -208,14 +208,14 @@ while true; do
     # 写入状态文件
     echo "$STATUS_JSON" > "$STATUS_FILE"
     
-    # 上传状态文件到远程位置
-    if [[ -n "$STATUS_REMOTE" ]]; then
-       REMOTE_STATUS_FILE="$STATUS_REMOTE/$TASK_ID.status.json"
-       
-       rclone copyto "$STATUS_FILE" "$REMOTE_STATUS_FILE" --no-traverse --ignore-times --ignore-size
-    fi
+    # 复制状态文件到本地/var/www/html/目录
+    LOCAL_STATUS_DIR="/var/www/html/task-status"
+    mkdir -p "$LOCAL_STATUS_DIR"
+    LOCAL_STATUS_FILE="$LOCAL_STATUS_DIR/$TASK_ID.status.json"
     
-    echo "[+] Status updated: $STATUS_FILE"
+    cp "$STATUS_FILE" "$LOCAL_STATUS_FILE"
+    
+    echo "[+] Status updated: $STATUS_FILE -> $LOCAL_STATUS_FILE"
 
     sleep $CHECK_INTERVAL
 done
